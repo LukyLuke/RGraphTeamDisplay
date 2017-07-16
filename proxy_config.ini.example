@@ -1,0 +1,13 @@
+[global]
+Username="Username"
+Password="P2ssw0rd"
+
+[SonarCube]
+;Username=""
+;Password=""
+URI="http://sonarcube.example.com"
+
+[Jira]
+;Username=""
+;Password=""
+URI="http://jira.example.com"

@@ -1,0 +1,13 @@
+/* Dimension Main Elements */
+html, div { margin: 0; padding: 0; width: 100%; height: 100%; }
+body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; } 
+span, p, img, canvas { height: auto; }
+
+/* Graph wrapper for slick carousel */
+.graph.wrapper { width: 100%; height: 100%; display: inline-block; }
+
+/* Issues display */
+.metrics { display: inline-block; width: 50%; }
+.metrics .title, .metrics .value { display: inline-block; width: 100%; height: 50%; text-align: center; font-size: 4em; text-transform: capitalize; }
+.metrics .title { font-weight: bolder; }
+.metrics .value { font-size: 3em; }

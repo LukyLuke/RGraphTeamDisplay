@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="de">
+	<head>
+		<title>Team-Display</title>
+		<meta charset="utf-8" />
+		<meta http-equiv="expires" content="0" />
+		<meta name="robots" content="noindex,nofollow" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+		
+		<link rel="stylesheet" href="styles.css" media="all" />
+		<link rel="stylesheet" href="lib/slick/slick.css"/>
+		
+		<script src="lib/jquery/jquery-3.2.1.min.js"></script>
+		<script src="lib/slick/slick.min.js"></script>
+		<script src="lib/SonarCube.js"></script>
+		
+		<script src="lib/RGraph/libraries/RGraph.common.core.js"></script>
+		
+		<script src="lib/RGraph/libraries/RGraph.svg.bar.js"></script>
+		<script src="lib/RGraph/libraries/RGraph.svg.common.core.js"></script>
+		<script src="lib/RGraph/libraries/RGraph.svg.common.fx.js"></script>
+		<script src="lib/RGraph/libraries/RGraph.svg.common.key.js"></script>
+		<script src="lib/RGraph/libraries/RGraph.svg.common.sheets.js"></script>
+		<script src="lib/RGraph/libraries/RGraph.svg.common.tooltips.js"></script>
+		<script src="lib/RGraph/libraries/RGraph.svg.hbar.js"></script>
+		<script src="lib/RGraph/libraries/RGraph.svg.line.js"></script>
+		<script src="lib/RGraph/libraries/RGraph.svg.pie.js"></script>
+		<script src="lib/RGraph/libraries/RGraph.svg.radar.js"></script>
+		<script src="lib/RGraph/libraries/RGraph.svg.rose.js"></script>
+		<script src="lib/RGraph/libraries/RGraph.svg.scatter.js"></script>
+		<script src="lib/RGraph/libraries/RGraph.svg.semicircularprogress.js"></script>
+		<script src="lib/RGraph/libraries/RGraph.svg.waterfall.js"></script>
+		
+		<script>
+		window.setTimeout(function() { window.location.reload(true); }, 3600000);
+		var graphConf = {
+			backgroundGridVlinesCount: 7,
+			shadow: true,
+			linewidth: 2,
+			spline: true,
+			colors: ['#900', '#090', '#009', '#909', '#990', '#099', '#999'],
+			filled: true,
+			filledOpacity: 0.05,
+			showLegend: true
+		};
+		
+		$(document).ready(function() {
+			var page = 1;
+			$('#main').append(
+				$('<div id="wrapper-graph-' + page + '" class="graph wrapper page-' + page + '"></div>')
+					.SonarCube({
+						resource: 'SonarResource&3Amaster',
+						metrics: ['blocker','critical','major'],
+						issues: true
+					}, graphConf)
+				);
+			
+			page++;
+			$('#main').append(
+				$('<div id="wrapper-graph-' + page + '" class="graph wrapper page-' + page + '"></div>')
+					.SonarCube({
+						resource: 'SonarResource&3Amaster',
+						metrics: ['coverage','line_coverage','branch_coverage']
+					}, $.extend(graphConf, {
+						title: 'UnitTests: Resource:master',
+						eachXAxisLabel: 8
+					}))
+				);
+			
+			page++;
+			$('#main').append(
+				$('<div id="wrapper-graph-' + page + '" class="graph wrapper page-' + page + '"></div>')
+					.SonarCube({
+						resource: 'SonarResource&3Amaster',
+						metrics: ['tests', 'skipped_tests', 'test_execution_time'],
+						scale: {'test_execution_time': -100}
+					}, $.extend(graphConf, {
+						title: 'UnitTests: Resource:master',
+						eachXAxisLabel: 8
+					}))
+				);
+			
+			page++;
+			$('#main').append(
+				$('<div id="wrapper-graph-' + page + '" class="graph wrapper page-' + page + '"></div>')
+					.SonarCube({
+						resource: 'SonarResource&3Amaster',
+						metrics: ['code_smells', 'sqale_index']
+					}, $.extend(graphConf, {
+						title: 'Code Quality, Smell vs. Effort to fix: Resource:master',
+						eachXAxisLabel: 8
+					}))
+				);
+			
+			page++;
+			$('#main').append(
+				$('<div id="wrapper-graph-' + page + '" class="graph wrapper page-' + page + '"></div>')
+					.SonarCube({
+						resource: 'SonarResource&3Amaster',
+						metrics: ['duplicated_blocks', 'duplicated_lines'],
+						scale: { 'duplicated_lines': -100 }
+					}, $.extend(graphConf, {
+						title: 'Duplicated Code: Resource:master',
+						eachXAxisLabel: 8
+					}))
+				);
+			
+			page++;
+			$('#main').append(
+				$('<div id="wrapper-graph-' + page + '" class="graph wrapper page-' + page + '"></div>')
+					.SonarCube({
+						resource: 'SonarResource&3Amaster',
+						metrics: ['classes', 'files', 'functions', 'noloc']
+					}, $.extend(graphConf, {
+						title: 'Code Clump (Number of...): Resource:master',
+						eachXAxisLabel: 8
+					}))
+				);
+			
+			page++;
+			$('#main').append(
+				$('<div id="wrapper-graph-' + page + '" class="graph wrapper page-' + page + '"></div>')
+					.SonarCube({
+						resource: 'SonarResource&3Amaster',
+						metrics: ['blocker_violations','critical_violations']
+					}, $.extend(graphConf, {
+						title: 'Quality Gate over time: Resource:master',
+						eachXAxisLabel: 8
+					}))
+				);
+			
+			// See https://github.com/kenwheeler/slick/
+			$('#main').slick({
+				speed: 500,
+				autoplay: true,
+				autoplaySpeed: 10000,
+				pauseOnFocus: false,
+				pauseOnHover: false,
+				draggable: true,
+				swipe: true,
+				touchMove: true,
+				easing: true,
+				arrows: false,
+				infinite: true,
+				slidesToShow: 1,
+				slidesToScroll: 1
+			});
+		});
+		</script>
+		
+	</head>
+	<body>
+		
+		<div id="main"></div>
+		
+	</body>
+</html>
