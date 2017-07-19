@@ -10,4 +10,4 @@ URI="http://sonarcube.example.com"
 [Jira]
 ;Username=""
 ;Password=""
-URI="http://jira.example.com"
+URI="https://jira.example.com"
