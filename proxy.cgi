@@ -74,7 +74,6 @@ if (length($timemachine) == undef) {
 	$db->db_put("last", $time);
 	
 	# As long as we are not one day further than the last sync, don't sync again
-	#$time -= 2 * 86400;
 	while ($time > $val) {
 		# From the current date: "YYYY-MM-DD"
 		($u,$u,$u, $day, $month, $year, $u,$u,$u) = localtime($time);
@@ -102,16 +101,21 @@ if (length($timemachine) == undef) {
 	
 	my ($k, $v, $c) = ("", "", 0);
 	my $cursor = $db->db_cursor();
+	$time = time() - (31 * 86400);
 	while ($cursor->c_get($k, $v, DB_NEXT) == 0) {
 		if ($k != "last") {
-			$response .= "," if $c > 0;
-			$response .= "$v";
-			$c++;
+			if ($k lt $time) {
+				$cursor->c_del();
+			} else {
+				$response .= "," if $c > 0;
+				$response .= "$v";
+				$c++;
+			}
 		}
 		#last if ($c == 10);
 	}
 	$response = "[$response]";
-
+	
 	undef $cursor ;
 	undef $db;
 }
