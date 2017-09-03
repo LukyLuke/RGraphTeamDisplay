@@ -9,8 +9,9 @@
 use strict;
 use warnings;
 use Config::Simple;
+use BerkeleyDB;
 
-my ($buffer, @pairs, $pair, $name, $value, $from, $uri, $params, $user_pass);
+my ($buffer, @pairs, $pair, $name, $value, $from, $uri, $params, $timemachine);
 my $cfg = new Config::Simple('proxy_config.ini');
 
 # GET or POST arguments
@@ -21,7 +22,7 @@ if ($ENV{'REQUEST_METHOD'} eq "POST"){
 	$buffer = $ENV{'QUERY_STRING'};
 }
 
-# Split all Arguments into their pairs and store them in $ARGS
+# Split all arguments into their pairs and separate them into the Config-Group, the URI and request params
 @pairs = split(/&/, $buffer);
 foreach $pair (@pairs) {
 	($name, $value) = split(/=/, $pair);
@@ -29,14 +30,16 @@ foreach $pair (@pairs) {
 		$from = $value;
 	} elsif ($name eq 'uri') {
 		$uri = $value;
+	} elsif ($name eq 'time') {
+		$timemachine = $value;
 	} else {
 		$params .= length($params) == 0 ? '' : '&';
 		$params .= $name . '=' . $value;
 	}
 }
 
-# Prepare remote variables for the CURL Request
-$user_pass = $cfg->param('global.Username') . ':' . $cfg->param('global.Password');
+# Prepare remote variables for the CURL request
+my $user_pass = $cfg->param('global.Username') . ':' . $cfg->param('global.Password');
 my $system = $cfg->param($from . '.URI');
 my $remote = $system . '/' . $uri . '?' . $params;
 
@@ -45,8 +48,73 @@ if ($cfg->param($from . '.Username') ne '') {
 	$user_pass = $cfg->param($from . '.Username') . ':' .  $cfg->param($from . '.Password');
 }
 
-# Use CURL to fetch the remote JSON
-my $response = `/usr/bin/curl -u $user_pass "$remote"`;
+# Use CURL to fetch the remote JSON in case this is no Jira-Timemachine call
+my ($response);
+if (length($timemachine) == undef) {
+	$response = `/usr/bin/curl -u $user_pass "$remote"`;
+	
+} else {
+	my $filename = "tm_" . $timemachine . ".db";
+	my $db = new BerkeleyDB::Hash
+			-Filename => $filename,
+			-Flags    => DB_CREATE
+		or die "Cannot open file $filename: $! $BerkeleyDB::Error\n" ;
+		
+	# If the current Timemachine is not initialized (first call) we fetch all values back 182 days (half a year)
+	my ($key, $val, $link, $u, $day, $month, $year, $date);
+	my $time = time();
+	
+	# Check if we need to fill the current timemachine for the last two months
+	if ($db->db_get("last", $val) != 0) {
+		$val = $time - (30 * 86400);
+	}
+	
+	# For being more precise, sync always the current and last day, so subtract one day from the last sync means sync that day as well
+	$val -= 86400;
+	$db->db_put("last", $time);
+	
+	# As long as we are not one day further than the last sync, don't sync again
+	#$time -= 2 * 86400;
+	while ($time > $val) {
+		# From the current date: "YYYY-MM-DD"
+		($u,$u,$u, $day, $month, $year, $u,$u,$u) = localtime($time);
+		$year += 1900;
+		$month += 1;
+		$month = $month < 10 ? "0$month" : $month;
+		$day = $day < 10 ? "0$day" : $day;
+		$date = "$year-$month-$day";
+		
+		# Replace the date in the JQL and fetch the data
+		$link = $remote;
+		$link =~ s/%7B%7BDATE%7D%7D/$date/g;
+		$link =~ s/{{DATE}}/$date/g;
+		$response = `/usr/bin/curl -u $user_pass "$link"`;
+		
+		# Store the current day in the Database and decrease one day
+		$response = "{\"t\":$time,\"d\":$response}";
+		$key = $date;
+		$db->db_put($key, $response);
+		
+		$time -= 86400;
+	}
+	
+	$response = "";
+	
+	my ($k, $v, $c) = ("", "", 0);
+	my $cursor = $db->db_cursor();
+	while ($cursor->c_get($k, $v, DB_NEXT) == 0) {
+		if ($k != "last") {
+			$response .= "," if $c > 0;
+			$response .= "$v";
+			$c++;
+		}
+		#last if ($c == 10);
+	}
+	$response = "[$response]";
+
+	undef $cursor ;
+	undef $db;
+}
 
 # Send out all headers
 print "Content-type: application/json\r\n";

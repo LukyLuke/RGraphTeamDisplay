@@ -58,9 +58,34 @@
 		$(document).ready(function() {
 			var page = 0;
 			
-			// Fields:
-			// customfield_11310 => Kategorie (inex/partner)
-			// customfield_12910 => Kunde
+			page++;
+			$('#main').append(
+				$('<div id="wrapper-graph-' + page + '" class="graph wrapper page-' + page + '"></div>')
+					.Jira({
+						filterString: 'Fachteam in (Partner) AND issuetype = Bug AND status changed to "Bereit zur Umsetzung" on {{DATE}}',
+						fields: ['priority'],
+						timeMachine: 'opened', // Define the name of the timeMachine here - use the string {{DATE}} in 'filterString' when using the TimeMachine
+						combined: false // Use 'false' for showing separated lines, 'true' for only one line for each field
+					}, $.extend(graphConf, {
+						title: 'New Bugs',
+						eachXAxisLabel: 7,
+						spline: false
+					}))
+			);
+			
+			page++;
+			$('#main').append(
+				$('<div id="wrapper-graph-' + page + '" class="graph wrapper page-' + page + '"></div>')
+					.Jira({
+						filterString: 'Fachteam in (Partner) AND issuetype = Bug AND status was in ("Bereit zur Umsetzung", Entwicklung, QA) on {{DATE}}',
+						fields: ['priority'],
+						timeMachine: 'numbugs',
+						combined: false
+					}, $.extend(graphConf, {
+						title: 'Number of Bugs',
+						eachXAxisLabel: 7
+					}))
+			);
 			
 			page++;
 			$('#main').append(
@@ -68,24 +93,6 @@
 					.Jira({
 						filterId: 67402,
 						fields: ['priority']
-					}, barConf)
-			);
-			
-			page++;
-			$('#main').append(
-				$('<div id="wrapper-graph-' + page + '" class="graph wrapper page-' + page + '"></div>')
-					.Jira({
-						filterId: 67402,
-						fields: ['customfield_11310']
-					}, barConf)
-			);
-			
-			page++;
-			$('#main').append(
-				$('<div id="wrapper-graph-' + page + '" class="graph wrapper page-' + page + '"></div>')
-					.Jira({
-						filterId: 67402,
-						fields: ['customfield_12910']
 					}, barConf)
 			);
 			
